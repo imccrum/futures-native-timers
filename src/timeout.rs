@@ -1,7 +1,7 @@
 use crate::Delay;
 use futures::{
     prelude::*,
-    task::{Poll, Waker},
+    task::{Poll, Context},
 };
 use pin_utils::unsafe_pinned;
 use std::{error, fmt, pin::Pin, time::Duration};
@@ -42,13 +42,13 @@ where
 {
     type Output = Result<T, TimeoutError>;
 
-    fn poll(mut self: Pin<&mut Self>, w: &Waker) -> Poll<Self::Output> {
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
         // Check if timed out
-        if let Poll::Ready(_) = self.as_mut().delay().poll(w) {
+        if let Poll::Ready(_) = self.as_mut().delay().poll(cx) {
             Poll::Ready(Err(TimeoutError))
         } else {
             // Poll main future
-            self.as_mut().future().poll(w).map(Ok)
+            self.as_mut().future().poll(cx).map(Ok)
         }
     }
 }

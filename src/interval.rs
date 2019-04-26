@@ -3,7 +3,7 @@ use std::time::{Duration, Instant};
 
 use futures::prelude::*;
 use futures::stream::FusedStream;
-use futures::task::{Poll, Waker};
+use futures::task::{Poll, Context};
 
 use super::Timer;
 
@@ -24,13 +24,13 @@ impl Interval {
 impl Stream for Interval {
     type Item = Instant;
 
-    fn poll_next(mut self: Pin<&mut Self>, lw: &Waker) -> Poll<Option<Self::Item>> {
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
         if !self.inner.is_active() {
             let interval = self.interval;
             self.inner.handle.init_interval(interval);
         }
 
-        self.inner.register_waker(lw);
+        self.inner.register_waker(cx.waker());
         if self.inner.is_done() {
             self.inner.state.set_done(false);
             Poll::Ready(Some(Instant::now()))

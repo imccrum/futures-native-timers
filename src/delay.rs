@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use futures::future::FusedFuture;
 use futures::prelude::*;
-use futures::task::{Poll, Waker};
+use futures::task::{Poll, Context};
 
 use super::Timer;
 
@@ -30,13 +30,13 @@ impl Delay {
 impl Future for Delay {
     type Output = ();
 
-    fn poll(mut self: Pin<&mut Self>, lw: &Waker) -> Poll<Self::Output> {
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
         if !self.inner.is_active() {
             let delay = self.delay;
             self.inner.handle.init_delay(delay);
         }
 
-        self.inner.register_waker(lw);
+        self.inner.register_waker(cx.waker());
         if self.inner.is_done() {
             self.done = true;
             Poll::Ready(())
