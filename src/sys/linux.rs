@@ -31,6 +31,15 @@ extern "C" {
 static HANDLER: Once = Once::new();
 const MYSIG: c_int = 40;
 
+#[cfg(target_env = "musl")]
+fn sigev_notify() -> i32 {
+    libc::SIGEV_SIGNAL
+}
+#[cfg(not(target_env = "musl"))]
+fn sigev_notify() -> i32 {
+    libc::SIGEV_THREAD_ID
+}
+
 unsafe fn init_handler() {
     let mut sa: sigaction = mem::zeroed();
     sa.sa_flags = libc::SA_SIGINFO;
@@ -83,7 +92,7 @@ impl NativeTimer {
         // tend to kill and respawn threads often.
         //
         // a solution to this might have to involve a dedicated thread for signal handling.
-        sev.sigev_notify = libc::SIGEV_THREAD_ID;
+        sev.sigev_notify = sigev_notify();
         let tid = libc::syscall(libc::SYS_gettid);
         sev.sigev_notify_thread_id = tid as i32;
 
