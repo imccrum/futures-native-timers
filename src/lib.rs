@@ -1,4 +1,4 @@
-#![feature(futures_api, async_await, await_macro)]
+#![feature(async_await, await_macro)]
 
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::SeqCst;
